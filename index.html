@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Load data from an external GeoJSON file</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+
+    <script
+        src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet"
+        href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.0/mapbox-gl-geocoder.css"
+        type="text/css" />
+
+
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 90%;
+            height: 60%;
+            margin-left: 80px;
+            margin-top: 200px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmVja3l5eXl5IiwiYSI6ImNsZWV2azM0bTBiN2k0NG12cnEybml0am0ifQ.pTk0bhJgKynBeJMf1r8N3A';
+        const map = new mapboxgl.Map({
+            container: 'map', // container ID
+            // Choose from Mapbox's core styles, or make your own style with Mapbox Studio
+            style: 'mapbox://styles/mapbox/streets-v12', // style URL
+            projection: 'globe', // Display the map as a globe, since satellite-v9 defaults to Mercator
+            zoom: 15, // starting zoom
+            center: [-73.98451127670837, 40.7554292155312], // // starting center in [lng, lat]
+            pitch: 60,
+        });
+
+        map.on('style.load', () => {
+            map.setFog({}); // Set the default atmosphere style
+        });
+
+
+        const geocoder = new MapboxGeocoder({
+            // Initialize the geocoder
+            accessToken: mapboxgl.accessToken, // Set the access token
+            mapboxgl: './pepe.png', // Set the mapbox-gl instance
+            marker: 'false', // Do not use the default marker style
+            placeholder: 'Search for free Wifi', // Placeholder text for the search bar
+            bbox: [-74.01385210952219, 40.70579868997914 , -73.92666849534191, 40.83321728305926], // Boundary for nyc
+            // proximity: {
+            //     longitude: -73.98501436838694, 
+            //     latitude: 40.752817569723675
+            // } // Coordinates of Empire State building
+        });
+
+
+
+
+
+
+        map.addControl(geocoder);
+
+        map.on('load', () => {
+            map.loadImage('./pepe.png', (error, image) => {
+                if (error) throw error;
+                map.addImage('pepe-icon', image, { sdf: true });
+                map.addSource('toilet', {
+                    type: 'geojson',
+                    // Use a URL for the value for the `data` property.
+                    data: './wifi.geojson'
+                });
+                map.addLayer({
+                    'id': 'wifi',
+                    'type': 'symbol',
+                    'source': 'toilet',
+                    'layout': {
+                        'icon-image': 'pepe-icon',
+                        'icon-size': 0.2
+                    },
+                    'paint': {
+                        'icon-color': 'green',
+                    }
+                });
+
+                geocoder.on('result', (event) => {
+                    map.getSource('toilet').setData(event.result.geometry);
+                });
+
+            });
+        });
+    </script>
+</body>
+
+</html>
